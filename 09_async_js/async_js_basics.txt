@@ -1,0 +1,49 @@
+Default JS engine behaviour
+-> synchronous (means code executed one line at time in order)
+-> single threaded (means one main thread to execute code,
+   so it can do only one task at a time)
+
+
+JS engine is made of Memory heap and Call Stack
+
+
+Execution context
+-> Execute one line of code at a time
+-> Each operation waits for the last one to complete before executing 
+
+
+Blocking code vs Non Blocking code
+Blocking code     -> Block the flow of program
+                  -> Read file synchronously (execution waits until the
+                     file read finishes before moving on)
+Non Blocking code -> Does not block execution 
+                  -> Read file asynchronously (the program starts the file read,
+                     then immediately continues doing other work. When the read
+                     finishes, a callback / promise / await resumes the logic.)  
+
+
+Event loop 
+1. setTimeout(fn, 2000) is called
+2. The timer is registered with Web APIs / Node APIs (outside the JS engine)
+3. JS continues executing the rest of the code (non-blocking)
+4. After at least 2 seconds, the callback is registered into the macrotask queue
+5. The event loop checks:
+   -> Is the call stack empty?
+   -> Are microtasks done?
+6. If yes → the callback is pushed onto the call stack and executed
+
+
+How fetch() Works
+1. fetch() is handled by Web APIs (browser) / Node APIs, not by the JS engine.
+2. It returns a Promise immediately, which is stored in global memory in a pending state.
+3. The Promise has internal private fields:
+   -> state (pending / fulfilled / rejected)
+   -> result (initially undefined)
+   -> internal success and failure handlers (conceptually onFulfilled / onRejected)
+4. The network request runs asynchronously in the background.
+5. When the async work finishes:
+   -> On network success → Promise is fulfilled (even for HTTP errors like 404)
+   -> On network failure → Promise is rejected
+6. .then() / await / .catch() callbacks are placed into the microtask queue.
+7. The event loop always drains the microtask queue first, before macrotasks.
+8. That’s why Promises feel “higher priority” than callbacks like setTimeout.
